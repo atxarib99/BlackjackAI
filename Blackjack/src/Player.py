@@ -1,8 +1,11 @@
+from Card import Card
 class Player:
-    def __init__(self, starting_chips=100):
+    def __init__(self, name, starting_chips=100):
         #an array of the cards currently held by the user
         self.cards = []
         self.chips = starting_chips
+        self.name = name
+        self.hiddencard = Card('Heart', 'A')
     
     def hit(self, deck):
         self.cards.append(deck.nextCard())
