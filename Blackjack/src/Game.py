@@ -50,7 +50,7 @@ class Game:
                 choice = input("Player " + str(player.name) + " your move [hit,stand]...")
                 if choice == "hit":
                     player.hit(self.deck)
-                    if player.evaluate() >= 21:
+                    if player.evaluate() > 21:
                         print("Player " + str(player.name) + " cards: " + str(player.cards))
                         print("Player " + str(player.name) + " value: " + str(player.evaluate()))
                         print("Bust!")
