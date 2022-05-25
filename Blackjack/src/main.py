@@ -1,9 +1,13 @@
 from Game import Game
 from GameWindow import GameWindow
 import time
-game = Game()
+game = Game(numplayers=1)
 
-game.startRound()
+while True:
+    game.startRound()
+    choice = input("play again? (y/n)")
+    if choice == 'n':
+        break
 
 # window = GameWindow()
 # time.sleep(5)

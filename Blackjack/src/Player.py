@@ -19,8 +19,18 @@ class Player:
         return True
     
     def evaluate(self):
-        #dynamic aces might need to be handed here
+        #aces are always handed as 11 unless over
+        sorted_cards = sorted(self.cards, key=lambda x: x.evaluate())
         value = 0
-        for card in self.cards:
-            value += card.evaluate()
+        for card in sorted_cards:
+            if card.char == 'A':
+                if value + 11 > 21:
+                    value += 1
+                else:
+                    value += 11
+            else:
+                value += card.evaluate()
+
         return value
+
+

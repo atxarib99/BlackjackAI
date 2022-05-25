@@ -13,7 +13,7 @@ class Deck:
         for i in range(numdecks):
             for suit in ['Club', 'Spade', 'Heart', 'Diamond']:
                 self.cards.append(Card(suit, 'A'))
-                for i in range(1, 11):
+                for i in range(2, 11):
                     self.cards.append(Card(suit, i))
                 self.cards.append(Card(suit,'J'))
                 self.cards.append(Card(suit,'Q'))
@@ -34,9 +34,15 @@ class Deck:
         if len(self.cards) < self.decksize - self.cutcard:
             self.needToReshuffle = True
         return self.cards.pop(0)
+    
+    def copy(self):
+        d = Deck()
+        d.cards = self.cards.copy()
+        return d
 
     def onRoundEnd(self):
         setupDeck(self.numdecks)
+        print('round end code run')
 
     def __str__(self):
         for card in self.cards:
