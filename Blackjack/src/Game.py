@@ -21,6 +21,8 @@ class Game:
         print(s)
         print("ROUND " + str(self.roundCount))
         print(s)
+        if self.roundCount % 10 == 0:
+            print(self.deck.calculateCount())
         self.askForBets()
         self.drawCards()
         print("Dealer cards: " + str(self.dealer.cards))

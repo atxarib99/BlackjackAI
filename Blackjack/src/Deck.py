@@ -34,6 +34,15 @@ class Deck:
         if len(self.cards) < self.decksize - self.cutcard:
             self.needToReshuffle = True
         return self.cards.pop(0)
+
+    def calculateCount(self):
+        count = 0
+        for card in self.cards:
+            if card.evaluate() >= 2 and card.evaluate() <= 6:
+                count -= 1
+            if card.evaluate() >= 10:
+                count += 1
+        return count
     
     def copy(self):
         d = Deck()
