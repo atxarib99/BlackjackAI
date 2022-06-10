@@ -22,9 +22,13 @@ class Player:
         #aces are always handed as 11 unless over
         sorted_cards = sorted(self.cards, key=lambda x: x.evaluate())
         value = 0
+        index = 0
         for card in sorted_cards:
+            index+=1 
+            #this misbehaves with multiple aces (4,6,A,A)
             if card.char == 'A':
-                if value + 11 > 21:
+                #if value + 11 > 21 - (aces left)
+                if value + 11 > 21 - (len(sorted_cards) - index):
                     value += 1
                 else:
                     value += 11
