@@ -1,6 +1,9 @@
 from Player import Player
 from Deck import Deck
+from GameWindow import GameWindow
 import os
+
+
 class Game:
     def __init__(self, numplayers=3):
         self.roundCount = 0
@@ -9,7 +12,8 @@ class Game:
         for i in range(numplayers):
             self.players.append(Player(name=str(i)))
         self.deck = Deck()
-    
+        self.window = GameWindow()
+
     def addPlayer(self, player):
         self.players.append(player)
 
@@ -26,6 +30,7 @@ class Game:
         self.askForBets()
         self.drawCards()
         print("Dealer cards: " + str(self.dealer.cards))
+        self.window.drawGameState(self)
         self.handlePlayers()
         self.handleDealer()
         for player in self.players:
@@ -35,15 +40,26 @@ class Game:
         print("Dealer" + " cards: " + str(self.dealer.cards))
         print("Dealer" + " value: " + str(self.dealer.evaluate()))
 
+        self.window.drawGameState(self, drawBlank=False)
         self.handlePayout()
         self.roundCount += 1
 
     def askForBets(self):
         for player in self.players:
             print("Player " + player.name + " has " + str(player.chips) + " chips.")
+        #remove players with 0 chips
+        index = 0
+        while index < len(self.players):
+            if self.players[index].chips <= 0:
+                self.players.remove(self.players[index])
+            index+=1
+
+        if len(self.players) == 0:
+            print('Game Over!')
+            exit(0)
+
         self.playerBets = [0] * len(self.players)
         for player,index in zip(self.players, range(len(self.players))):
-            #todo: error checking here. Cant bet more than u have
             bet = -1
             while bet == -1:
                 bet = int(input("Player " + str(player.name) + " enter how much you want to bet..."))
@@ -64,6 +80,7 @@ class Game:
             player.hit(self.deck)
         #dealer hidden
         self.dealer.hiddencard = self.deck.nextCard()
+        print(self.dealer.hiddencard)
         #players
         for player in self.players:
             player.hit(self.deck)
@@ -75,6 +92,7 @@ class Game:
         for player in self.players:
             index += 1
             while True:
+                self.window.drawGameState(self)
                 if player.evaluate() == 21:
                     break
                 print("Player " + str(player.name) + " cards: " + str(player.cards))
@@ -87,6 +105,7 @@ class Game:
                         print("Player " + str(player.name) + " value: " + str(player.evaluate()))
                         print("Bust!")
                         break
+                #dont let players double if they dont have enough chips
                 if choice == "double":
                     player.chips -= self.playerBets[index]
                     self.playerBets[index] *= 2
