@@ -8,6 +8,7 @@ class Deck:
         self.setupDeck(numdecks)
 
     def setupDeck(self, numdecks=6):
+        self.needToReshuffle = False
         self.cards = []
         self.decksize = numdecks * 52
         for i in range(numdecks):

@@ -1,4 +1,6 @@
 from Player import Player
+from Human import Human
+from FixedAgent import FixedAgent
 from Deck import Deck
 from GameWindow import GameWindow
 import os
@@ -8,9 +10,12 @@ class Game:
     def __init__(self, numplayers=3):
         self.roundCount = 0
         self.players = []
-        self.dealer = Player("Dealer")
+        self.dealer = Human("Dealer")
         for i in range(numplayers):
-            self.players.append(Player(name=str(i)))
+            fa = FixedAgent(name=str(i))
+            fa.setGame(self)
+            self.players.append(fa)
+
         self.deck = Deck()
         self.window = GameWindow()
 
@@ -24,6 +29,9 @@ class Game:
             s += "="
         print(s)
         print("ROUND " + str(self.roundCount))
+        if self.deck.needToReshuffle:
+            self.deck.setupDeck()
+            print('DECK RESHUFFLED')
         print(s)
         if self.roundCount % 10 == 0:
             print(self.deck.calculateCount())
@@ -60,12 +68,7 @@ class Game:
 
         self.playerBets = [0] * len(self.players)
         for player,index in zip(self.players, range(len(self.players))):
-            bet = -1
-            while bet == -1:
-                bet = int(input("Player " + str(player.name) + " enter how much you want to bet..."))
-                if bet > player.chips:
-                    bet = -1
-                    print('bet was too large!')
+            bet = player.askForBets()
             self.playerBets[index] = bet
             player.chips -= bet
     
@@ -97,7 +100,7 @@ class Game:
                     break
                 print("Player " + str(player.name) + " cards: " + str(player.cards))
                 print("Player " + str(player.name) + " value: " + str(player.evaluate()))
-                choice = input("Player " + str(player.name) + " your move [hit,stand,double]...")
+                choice = player.strategy()
                 if choice == "hit":
                     player.hit(self.deck)
                     if player.evaluate() > 21:

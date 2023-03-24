@@ -46,13 +46,29 @@ class GameWindow:
             self.canv.create_image(x,y,anchor=tk.NW, image=self.images[-1])
 
         #lets just do one player first for my sanity middle bottom
-        x = width / 2 - (cardWidth/2)
-        y = height - 10
+
+        #max 3 players again for my sanity :)
         
-        for card in gameState.players[-1].cards:
-            self.images.append(self.getCardImg(card.suit,card.char))
-            self.canv.create_image(x,y,anchor=tk.SW, image=self.images[-1])
-            x+=50
+        for player in gameState.players:
+
+            x=0
+            y=0
+            if player.name == '0':
+                x = width - cardWidth - (((len(player.cards)) - 1) * 50)
+                y = height/2
+
+            if player.name == '1':
+                x = width / 2 - (cardWidth/2)
+                y = height - 10
+
+            if player.name == '2':
+                x = 10
+                y = height/2
+                
+            for card in player.cards:
+                self.images.append(self.getCardImg(card.suit,card.char))
+                self.canv.create_image(x,y,anchor=tk.SW, image=self.images[-1])
+                x+=50
 
         self.canv.pack()
         self.main.update()

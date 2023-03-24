@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from Card import Card
 class Player:
     def __init__(self, name, starting_chips=100):
@@ -6,6 +7,12 @@ class Player:
         self.chips = starting_chips
         self.name = name
         self.hiddencard = Card('Heart', 'A')
+        self.initagain()
+
+    #init for each type of player
+    @abstractmethod
+    def initagain():
+        pass
     
     def hit(self, deck):
         self.cards.append(deck.nextCard())
@@ -17,6 +24,17 @@ class Player:
     def stand(self):
         #end turn mech
         return True
+
+    #each player/agent will implement this uniquely
+    @abstractmethod
+    def askForBets(self):
+        pass
+
+    #each player will define their strategy when asked
+    @abstractmethod
+    def strategy(self):
+        pass
+
     
     def evaluate(self):
         #aces are always handed as 11 unless over
