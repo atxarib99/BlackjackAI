@@ -12,7 +12,7 @@ class Game:
         self.players = []
         self.dealer = Human("Dealer")
         for i in range(numplayers):
-            fa = FixedAgent(name=str(i))
+            fa = FixedAgent(name=str(i), starting_chips=100)
             fa.setGame(self)
             self.players.append(fa)
 
@@ -41,24 +41,27 @@ class Game:
         self.window.drawGameState(self)
         self.handlePlayers()
         self.handleDealer()
-        for player in self.players:
-            print("Player " + str(player.name) + " cards: " + str(player.cards))
-            print("Player " + str(player.name) + " value: " + str(player.evaluate()))
+        for indivplayer in self.players:
+            splits = indivplayer.flatten()
+            for player in splits:
+                print("Player " + str(player.name) + " cards: " + str(player.cards))
+                print("Player " + str(player.name) + " value: " + str(player.evaluate()))
         
         print("Dealer" + " cards: " + str(self.dealer.cards))
         print("Dealer" + " value: " + str(self.dealer.evaluate()))
 
         self.window.drawGameState(self, drawBlank=False)
         self.handlePayout()
+        self.collapsePlayers()
         self.roundCount += 1
 
     def askForBets(self):
         for player in self.players:
-            print("Player " + player.name + " has " + str(player.chips) + " chips.")
+            print("Player " + player.name + " has " + str(player.chip_stack.chips) + " chips.")
         #remove players with 0 chips
         index = 0
         while index < len(self.players):
-            if self.players[index].chips <= 0:
+            if self.players[index].chip_stack.chips <= 0:
                 self.players.remove(self.players[index])
             index+=1
 
@@ -66,11 +69,10 @@ class Game:
             print('Game Over!')
             exit(0)
 
-        self.playerBets = [0] * len(self.players)
         for player,index in zip(self.players, range(len(self.players))):
             bet = player.askForBets()
-            self.playerBets[index] = bet
-            player.chips -= bet
+            player.betSize = bet
+            player.chip_stack.chips -= bet
     
     def drawCards(self):
         #reset all cards
@@ -92,31 +94,51 @@ class Game:
     
     def handlePlayers(self):
         index = -1
-        for player in self.players:
-            index += 1
-            while True:
-                self.window.drawGameState(self)
-                if player.evaluate() == 21:
-                    break
-                print("Player " + str(player.name) + " cards: " + str(player.cards))
-                print("Player " + str(player.name) + " value: " + str(player.evaluate()))
-                choice = player.strategy()
-                if choice == "hit":
-                    player.hit(self.deck)
-                    if player.evaluate() > 21:
-                        print("Player " + str(player.name) + " cards: " + str(player.cards))
-                        print("Player " + str(player.name) + " value: " + str(player.evaluate()))
-                        print("Bust!")
+        #dealer should check blackjack if holding 10orA
+        #insurace?
+        for indivplayer in self.players:
+            splits = [indivplayer]
+            while len(splits) > 0:
+                player = splits.pop(0)
+                index += 1
+                while True:
+                    self.window.drawGameState(self)
+                    #handle extra payout for blackjack
+                    if player.evaluate() == 21:
                         break
-                #dont let players double if they dont have enough chips
-                if choice == "double":
-                    player.chips -= self.playerBets[index]
-                    self.playerBets[index] *= 2
-                    player.hit(self.deck)
-                    break
-                if choice == "stand":
-                    break
-            
+                    print("Player " + str(player.name) + " cards: " + str(player.cards))
+                    print("Player " + str(player.name) + " value: " + str(player.evaluate()))
+                    choice = player.strategy()
+                    if choice == "hit":
+                        player.hit(self.deck)
+                        if player.evaluate() > 21:
+                            print("Player " + str(player.name) + " cards: " + str(player.cards))
+                            print("Player " + str(player.name) + " value: " + str(player.evaluate()))
+                            print("Bust!")
+                            break
+                    #dont let players double if they dont have enough chips
+                    if choice == "double":
+                        if player.chip_stack.chips < player.betSize:
+                            print('Sorry, you are too broke to double')
+                        else:
+                            player.chip_stack.chips -= player.betSize
+                            player.betSize *= 2
+                            player.hit(self.deck)
+                            break
+                    if choice == "split":
+                        #check player has enough money to split
+                        if player.chip_stack.chips < player.betSize:
+                            print('Sorry, you are too broke to split')
+                        else:
+                            player.createSplit(player.cards.pop())
+                            splits.append(player.split)
+                            #take players bet
+                            player.chip_stack.chips -= player.betSize
+                            player.split.betSize = player.betSize
+                            player.hit(self.deck)
+                            player.split.hit(self.deck)
+                    if choice == "stand":
+                        break
     
     def handleDealer(self):
         self.dealer.cards.append(self.dealer.hiddencard)
@@ -128,19 +150,26 @@ class Game:
         dealer_value = self.dealer.evaluate()
         if dealer_value > 21:
             #payout everyone not over 21
-            player_index = 0
-            for player in self.players:
-                if player.evaluate() <= 21:
-                    player.chips += 2*self.playerBets[player_index]
-                player_index += 1
+            for indivplayer in self.players:
+                splits = indivplayer.flatten()
+                for player in splits:
+                    if player.evaluate() <= 21:
+                        player.chip_stack.chips += 2*player.betSize
+                        print("Payed player: " + player.name + " " + str(2*player.betSize) + " chips.")
         else:
-            player_index = 0
-            for player in self.players:
-                if player.evaluate() > self.dealer.evaluate() and player.evaluate() <= 21:
-                    player.chips += 2*self.playerBets[player_index]
-                if player.evaluate() == self.dealer.evaluate():
-                    player.chips += self.playerBets[player_index]
-                player_index += 1
-            
+            for indivplayer in self.players:
+                splits = indivplayer.flatten()
+                for player in splits:
+                    if player.evaluate() > self.dealer.evaluate() and player.evaluate() <= 21:
+                        player.chip_stack.chips += 2*player.betSize
+                        print("Payed player: " + player.name + " " + str(2*player.betSize) + " chips.")
+                    if player.evaluate() == self.dealer.evaluate():
+                        player.chip_stack.chips += player.betSize
+                        print("Pushed player: " + player.name + " " + str(player.betSize) + " chips.")
+    
+    #lets players know its ok to collect money from their splits.
+    def collapsePlayers(self):
+        for indivplayer in self.players:
+            indivplayer.collapse()
 
 
