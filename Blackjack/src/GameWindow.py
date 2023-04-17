@@ -11,8 +11,6 @@ class GameWindow:
         self.main = tk.Tk()
         self.canv = tk.Canvas(self.main, width=width, height=height)
         self.canv.pack()
-        img = self.getCardImg("Diamond", 10)
-        self.canv.create_image(50,50, anchor=tk.NW, image=img)
         self.main.update()
         # filename = PhotoImage(file = "sunshine.gif")
         # image = canvas.create_image(50, 50, anchor = NE, image = filename)
@@ -48,6 +46,12 @@ class GameWindow:
         #lets just do one player first for my sanity middle bottom
 
         #max 3 players again for my sanity :)
+
+        def drawCards(cards, x, y):
+            for card in cards:
+                self.images.append(self.getCardImg(card.suit,card.char))
+                self.canv.create_image(x,y,anchor=tk.SW, image=self.images[-1])
+                x+=50
         
         for player in gameState.players:
 
@@ -56,19 +60,34 @@ class GameWindow:
             if player.name == '0':
                 x = width - cardWidth - (((len(player.cards)) - 1) * 50)
                 y = height/2
+                drawCards(player.cards,x,y)
+                splitplayer = player.split
+                while splitplayer is not None:
+                    y+=100
+                    drawCards(splitplayer.cards, x, y)
+                    splitplayer = splitplayer.split
+                
 
             if player.name == '1':
                 x = width / 2 - (cardWidth/2)
                 y = height - 10
+                drawCards(player.cards,x,y)
+                splitplayer = player.split
+                while splitplayer is not None:
+                    x-=250
+                    drawCards(splitplayer.cards, x, y)
+                    splitplayer = splitplayer.split
 
             if player.name == '2':
                 x = 10
                 y = height/2
+                drawCards(player.cards,x,y)
+                splitplayer = player.split
+                while splitplayer is not None:
+                    y+=100
+                    drawCards(splitplayer.cards, x, y)
+                    splitplayer = splitplayer.split
                 
-            for card in player.cards:
-                self.images.append(self.getCardImg(card.suit,card.char))
-                self.canv.create_image(x,y,anchor=tk.SW, image=self.images[-1])
-                x+=50
 
         self.canv.pack()
         self.main.update()

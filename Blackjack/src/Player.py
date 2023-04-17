@@ -1,19 +1,49 @@
 from abc import ABC, abstractmethod
 from Card import Card
+from ChipStack import ChipStack
 class Player:
-    def __init__(self, name, starting_chips=100):
+    def __init__(self, name, starting_chips=100, chip_stack=None):
         #an array of the cards currently held by the user
         self.cards = []
-        self.chips = starting_chips
+        self.chips = 0
+        self.chip_stack = None
+        if chip_stack is None:
+            self.chip_stack = ChipStack(starting_chips)
+        else:
+            self.chip_stack = chip_stack
         self.name = name
         self.hiddencard = Card('Heart', 'A')
+        self.betSize = 0
+        self.split = None
         self.initagain()
 
     #init for each type of player
     @abstractmethod
     def initagain():
         pass
-    
+
+    #how player will handle splits
+    @abstractmethod
+    def createSplit():
+        pass
+
+    #returns a list of players from all splits
+    def flatten(self):
+        flat = []
+        me = self
+        while me.split is not None:
+            flat.append(me)
+            me = me.split
+        flat.append(me)
+        return flat
+
+    #collapses and collects money from splits
+    def collapse(self):
+        if self.split is not None:
+            self.split.collapse()
+            del self.split
+            self.split = None
+
     def hit(self, deck):
         self.cards.append(deck.nextCard())
         #bust

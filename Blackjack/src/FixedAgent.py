@@ -23,7 +23,7 @@ class FixedAgent(Player):
         def convert(old):
             #implement split later :(
             if old == 'SP':
-                return 'stand'
+                return 'split'
 
             if old[0] == 'S':
                 return 'stand'
@@ -46,10 +46,13 @@ class FixedAgent(Player):
             for dv,index in zip(list(table.keys()), range(0,len(list(table.keys())))):
                 table[dv][playerVal] = convert(strip(strats[index]))
 
-        print(table)
         return table
 
 
+    def createSplit(self, card):
+        self.split = FixedAgent(self.name+"split1", chip_stack=self.chip_stack)
+        self.split.setGame(self.game)
+        self.split.cards.append(card)
        
 
     #fixed agent always bets minimum
@@ -65,21 +68,27 @@ class FixedAgent(Player):
         if showcard == 11:
             showcard = 'A'
         myval = self.evaluate()
+        #ERROR: This handling is incorrect! after player.hit() this fails!
         #handle soft
         if self.cards[0].char == 'A' or self.cards[1].char == 'A':
-            if self.cards[0].char == 'A':
-                myval = 'A' + str(self.cards[1].char)
-            if self.cards[1].char == 'A':
-                myval = 'A' + str(self.cards[0].char)
-        #handle pairs
-        if self.cards[0].char == self.cards[1].char:
+            #if we have exactly two cards
+            if len(self.cards) == 2:
+                if self.cards[0].char == 'A':
+                    myval = 'A' + str(self.cards[1].char)
+                if self.cards[1].char == 'A':
+                    myval = 'A' + str(self.cards[0].char)
+            else:
+                #TODO: figure out if we are soft, and set to equiv table entry. For now image everything is hard.
+                #its almost right, we will mess us stuff like soft 16.
+                pass
+        #handle pairs if we have exactly two cards
+        if self.cards[0].char == self.cards[1].char and len(self.cards) == 2:
             if self.cards[0].evaluate() == 10:
                 myval = 'TT'
             else:
                 myval = str(self.cards[0].char) + str(self.cards[1].char)
         strat = self.table[str(showcard)][str(myval)]
-        print(showcard)
-        print(myval)
+        #can we get stuck in a 'hit -> double' loop?
         print(strat)
         return strat
 
